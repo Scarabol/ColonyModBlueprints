@@ -68,7 +68,7 @@ namespace ScarabolMods
                   blocks.Add(new BlueprintBlock(offset, node["typename"].GetAs<string>()));
                 }
               }
-              BlueprintsReplaceBlockCode.blueprints.Add("Blueprint"+name, blocks);
+              BlueprintsReplaceBlockCode.blueprints.Add("Blueprint "+name, blocks);
             }
             catch (Exception exception)
             {
