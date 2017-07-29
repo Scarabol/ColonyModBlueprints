@@ -23,23 +23,57 @@ namespace ScarabolMods
         if (Pipliz.JSON.JSON.Deserialize(filename, out json, false))
         {
           if (json != null) {
-            string name = json["name"].GetAs<string>();
-            List<BlueprintBlock> blocks = new List<BlueprintBlock>();
-            Pipliz.Log.Write(string.Format("Reading blueprint {0} from {1}", name, filename));
-            foreach (JSONNode node in json["blocks"].LoopArray())
+            try
             {
-              try
+              string name = json["name"].GetAs<string>();
+              List<BlueprintBlock> blocks = new List<BlueprintBlock>();
+              Pipliz.Log.Write(string.Format("Reading blueprint {0} from {1}", name, filename));
+              foreach (JSONNode node in json["blocks"].LoopArray())
               {
-                Pipliz.Vector3Int offset = new Pipliz.Vector3Int();
-                offset = (Pipliz.Vector3Int)node["offset"];
-                blocks.Add(new BlueprintBlock(offset, node["typename"].GetAs<string>()));
+                Pipliz.Vector3Int offset = (Pipliz.Vector3Int)node["offset"];
+                try {
+                  String formName = node["form"].GetAs<string>();
+                  if (formName.Equals("area"))
+                  {
+                    int width = 1;
+                    try {
+                      width = node["width"].GetAs<int>();
+                    } catch (Exception) {}
+                    int height = 1;
+                    try {
+                      height = node["height"].GetAs<int>();
+                    } catch (Exception) {}
+                    int depth = 1;
+                    try {
+                      depth = node["depth"].GetAs<int>();
+                    } catch (Exception) {}
+                    for (int x = 0; x < width; x++)
+                    {
+                      for (int y = 0; y < height; y++)
+                      {
+                        for (int z = 0; z < depth; z++)
+                        {
+                          blocks.Add(new BlueprintBlock(offset.Add(x, y, z), node["typename"].GetAs<string>()));
+                        }
+                      }
+                    }
+                  }
+                  else
+                  {
+                    Pipliz.Log.Write(string.Format("Invalid form type {0}; Allowed types: area", formName));
+                  }
+                }
+                catch (Exception)
+                {
+                  blocks.Add(new BlueprintBlock(offset, node["typename"].GetAs<string>()));
+                }
               }
-              catch (Exception exception)
-              {
-                Pipliz.Log.Write("Exception loading block;" + exception.Message);
-              }
+              BlueprintsReplaceBlockCode.blueprints.Add("Blueprint"+name, blocks);
             }
-            BlueprintsReplaceBlockCode.blueprints.Add("Blueprint"+name, blocks);
+            catch (Exception exception)
+            {
+              Pipliz.Log.Write(string.Format("Exception loading from {0}; {1}", filename, exception.Message));
+            }
           }
         }
       }
