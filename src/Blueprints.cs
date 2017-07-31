@@ -65,7 +65,7 @@ namespace ScarabolMods
                   }
                 }
               }
-              BlueprintsReplaceBlockCode.blueprints.Add("Blueprint "+name, blocks);
+              BlueprintsReplaceBlockCode.blueprints.Add("blueprint "+name, blocks);
             }
             catch (Exception exception)
             {

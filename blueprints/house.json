@@ -1,5 +1,5 @@
 {
-  "name" : "House",
+  "name" : "house",
   "blocks" : [
     { "x" : 0, "y" : 0, "z" : 0, "typename" : "stonebricks" },
     { "x" : 1, "y" : 0, "z" : 0, "typename" : "stonebricks" },
