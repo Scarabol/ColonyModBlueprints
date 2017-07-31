@@ -3,14 +3,18 @@
 ## Build
 
 * install Linux
-* call make.sh from bash
+* use make
+```Shell
+make
+```
 
 ## TODO
-* nice and shiny texture for blueprint itself
+* nice and shiny texture(s) for blueprint inventory item (designers pls help)
+* nice and shiny texture(s) for blueprint block (designers pls help)
 
 ### later
 
 * add NPC job type to gather mats ... (waiting for API)
 
-'''Pull Requests welcome!'''
+**Pull requests welcome!**
 
