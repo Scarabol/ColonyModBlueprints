@@ -15,14 +15,16 @@ namespace ScarabolMods
     [ModLoader.ModCallback(ModLoader.EModCallbackType.AfterStartup)]
     public static void AfterStartup()
     {
-      Pipliz.Log.Write("Loaded Blueprints Mod 1.0 by Scarabol");
+      Pipliz.Log.Write("Loaded Blueprints Mod 3.0 by Scarabol");
       // FIXME scan for blueprints
       string[] files = Directory.GetFiles("gamedata/mods/Scarabol/Blueprints/blueprints/", "**.json", SearchOption.AllDirectories);
-      foreach (string filename in files) {
+      foreach (string filename in files)
+      {
         JSONNode json;
         if (Pipliz.JSON.JSON.Deserialize(filename, out json, false))
         {
-          if (json != null) {
+          if (json != null)
+          {
             try
             {
               string name = json["name"].GetAs<string>();
@@ -30,42 +32,37 @@ namespace ScarabolMods
               Pipliz.Log.Write(string.Format("Reading blueprint {0} from {1}", name, filename));
               foreach (JSONNode node in json["blocks"].LoopArray())
               {
-                Pipliz.Vector3Int offset = (Pipliz.Vector3Int)node["offset"];
-                try {
-                  String formName = node["form"].GetAs<string>();
-                  if (formName.Equals("area"))
-                  {
-                    int width = 1;
-                    try {
-                      width = node["width"].GetAs<int>();
-                    } catch (Exception) {}
-                    int height = 1;
-                    try {
-                      height = node["height"].GetAs<int>();
-                    } catch (Exception) {}
-                    int depth = 1;
-                    try {
-                      depth = node["depth"].GetAs<int>();
-                    } catch (Exception) {}
-                    for (int x = 0; x < width; x++)
-                    {
-                      for (int y = 0; y < height; y++)
-                      {
-                        for (int z = 0; z < depth; z++)
-                        {
-                          blocks.Add(new BlueprintBlock(offset.Add(x, y, z), node["typename"].GetAs<string>()));
-                        }
-                      }
-                    }
-                  }
-                  else
-                  {
-                    Pipliz.Log.Write(string.Format("Invalid form type {0}; Allowed types: area", formName));
-                  }
+                int startx = getJSONInt(node, "startx", "x", 0, false);
+                int starty = getJSONInt(node, "starty", "y", 0, false);
+                int startz = getJSONInt(node, "startz", "z", 0, false);
+                string typename;
+                try
+                {
+                  typename = node["typename"].GetAs<string>();
                 }
                 catch (Exception)
                 {
-                  blocks.Add(new BlueprintBlock(offset, node["typename"].GetAs<string>()));
+                  try
+                  {
+                    typename = node["t"].GetAs<string>();
+                  }
+                  catch (Exception)
+                  {
+                    throw new Exception(string.Format("typename not defined or not a string"));
+                  }
+                }
+                int width = getJSONInt(node, "width", "w", 1, true);
+                int height = getJSONInt(node, "height", "h", 1, true);
+                int depth = getJSONInt(node, "depth", "d", 1, true);
+                for (int x = startx; x < startx + width; x++)
+                {
+                  for (int y = starty; y < starty + height; y++)
+                  {
+                    for (int z = startz; z < startz + depth; z++)
+                    {
+                      blocks.Add(new BlueprintBlock(x, y, z, typename));
+                    }
+                  }
                 }
               }
               BlueprintsReplaceBlockCode.blueprints.Add("Blueprint "+name, blocks);
@@ -74,6 +71,32 @@ namespace ScarabolMods
             {
               Pipliz.Log.Write(string.Format("Exception loading from {0}; {1}", filename, exception.Message));
             }
+          }
+        }
+      }
+    }
+
+    private static int getJSONInt(JSONNode node, string name, string alternativeName, int defaultValue, bool optional)
+    {
+      try
+      {
+        return node[name].GetAs<int>();
+      }
+      catch (Exception)
+      {
+        try
+        {
+          return node[alternativeName].GetAs<int>();
+        }
+        catch (Exception)
+        {
+          if (optional)
+          {
+            return defaultValue;
+          }
+          else
+          {
+            throw new Exception(string.Format("Neither {0} nor {1} defined or not an integer", name, alternativeName));
           }
         }
       }
@@ -161,17 +184,16 @@ namespace ScarabolMods
 
   public class BlueprintBlock
   {
-    public Vector3Int offset;
+    public int offsetx;
+    public int offsety;
+    public int offsetz;
     public string typename;
 
-    public BlueprintBlock(int x, int y, int z, string typename)
-      : this(new Vector3Int(x, y, z), typename)
+    public BlueprintBlock(int offsetx, int offsety, int offsetz, string typename)
     {
-    }
-
-    public BlueprintBlock(Vector3Int offset, string typename)
-    {
-      this.offset = offset;
+      this.offsetx = offsetx;
+      this.offsety = offsety;
+      this.offsetz = offsetz;
       this.typename = typename;
     }
   }
@@ -201,19 +223,24 @@ namespace ScarabolMods
         blueprints.TryGetValue(name, out blocks);
         foreach (BlueprintBlock blueblock in blocks)
         {
-          int realx = blueblock.offset.z;
-          int realz = -blueblock.offset.x;
-          if (newType == hxm) {
-            realx = -blueblock.offset.z;
-            realz = blueblock.offset.x;
-          } else if (newType == hzp) {
-            realx = blueblock.offset.x;
-            realz = blueblock.offset.z;
-          } else if (newType == hzm) {
-            realx = -blueblock.offset.x;
-            realz = -blueblock.offset.z;
+          int realx = blueblock.offsetz;
+          int realz = -blueblock.offsetx;
+          if (newType == hxm)
+          {
+            realx = -blueblock.offsetz;
+            realz = blueblock.offsetx;
           }
-          ServerManager.TrySetBlock(position.Add(realx, blueblock.offset.y, realz), ItemTypes.IndexLookup.GetIndex(blueblock.typename), causedBy, false);
+          else if (newType == hzp)
+          {
+            realx = blueblock.offsetx;
+            realz = blueblock.offsetz;
+          }
+          else if (newType == hzm)
+          {
+            realx = -blueblock.offsetx;
+            realz = -blueblock.offsetz;
+          }
+          ServerManager.TrySetBlock(position.Add(realx, blueblock.offsety, realz), ItemTypes.IndexLookup.GetIndex(blueblock.typename), causedBy, false);
         }
       }, 3.0);
     }
