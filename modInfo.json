@@ -1,8 +1,0 @@
-{
-	"assemblies" : [
-		{
-			"path" : "Blueprints.dll",
-			"enabled" : true
-		}
-	]
-}

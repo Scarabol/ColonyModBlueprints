@@ -1,1 +1,5 @@
 *.dll
+*.swp
+*.zip
+/modInfo.json
+
